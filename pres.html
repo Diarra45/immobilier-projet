@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maisons Inarch - Vente de maisons de prestige</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="pres.css">
+    
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader">
+        <div class="house">
+            <div class="roof"></div>
+            <div class="walls">
+                <div class="window"></div>
+                <div class="door"></div>
+            </div>
+        </div>
+        <p>Chargement des plus belles propriétés...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="animate__animated animate__fadeInDown">
+        <div class="logo">
+            <h1>Maisons Inarch</h1>
+            <p>Votre demeure exceptionnelle</p>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#accueil">Accueil</a></li>
+                <li><a href="#biens">Nos biens</a></li>
+                <li><a href="#galerie">Galerie</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+        <div class="burger-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="hero">
+        <div class="hero-content animate__animated animate__fadeIn">
+            <h2>Trouvez la maison inachervée  de vos rêves et transformer là en ceci </h2>
+            <p>Découvrez notre sélection exclusive de propriétés d'exception</p>
+            <a href="#biens" class="btn pulse">Voir nos biens</a>
+        </div>
+    </section>
+
+    <!-- Properties Section -->
+    <section id="biens" class="properties">
+        <h2>Nos dernières propriétés</h2>
+        <div class="property-list" id="propertyContainer">
+
+            <!-- Les propriétés seront chargées ici via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="galerie" class="gallery-section">
+        <div class="section-header">
+            <h2>Galerie de Nos Réalisations</h2>
+            <p>Découvrez nos propriétés à travers ces images exclusives</p>
+        </div>
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="inarchever /images-1.jpg" 
+                     alt="Maison inarcherever" class="gallery-img">
+                <div class="gallery-overlay">
+                    <h3>Villa Contemporaine</h3>
+                    <p>Inarch, Quartier Résidentiel</p>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <img src="inarchever /images-2.jpg" 
+                     alt="Maison inarcherever" class="gallery-img">
+                <div class="gallery-overlay">
+                    <h3>Maison de Campagne</h3>
+                    <p>Inarch, Zone Rurale</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="contact-container">
+            <div class="contact-info">
+                <h2>Contactez-nous si vous voulez être patenaire ou si vous voulez acheter une propriété</h2>
+                <p><i class="fas fa-map-marker-alt"></i> riviera m'badon</p>
+                <p><i class="fas fa-phone"></i> +225 05 66 26 09 01</p>
+                <p><i class="fas fa-envelope"></i> diarrassoubazie45@gmail.com</p>
+            </div>
+            <form id="contactForm">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="Votre nom" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="Votre email" required>
+                </div>
+                <div class="form-group">
+                    <textarea id="message" placeholder="Votre message" required></textarea>
+                </div>
+                <button type="submit" class="btn">Envoyer</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Maisons Inarch</h3>
+                <p>Spécialistes de l'immobilier de prestige depuis peu.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p><i class="fas fa-map-marker-alt"></i> Nan digital </p>
+                <p><i class="fas fa-phone"></i> +225 05 66 26 09 01</p>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2023 Maisons Inarch. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script src="pres.js"></script>
+    
+    
+</body>
+</html>

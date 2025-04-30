@@ -74,6 +74,7 @@ const properties = [
         bedrooms: "inconnu",
         bathrooms: "inconnu",
         area: "inconnu",
+        ville: "Grand-Bassam",
         video: "https://www.youtube.com/embed/dQw4w9WgXcQ"
     },
     {
@@ -85,7 +86,8 @@ const properties = [
         bedrooms: "inconnu",
         bathrooms: "inconnu",
         area: "inconnu",
-        video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" // Format classique
+        ville: "Abidjan",
+        video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
     },
     {
         id: 3,
@@ -96,7 +98,8 @@ const properties = [
         bedrooms: "inconnu",
         bathrooms: "inconnu",
         area: "inconnu",
-        video: "https://youtu.be/dQw4w9WgXcQ" // Format raccourci
+        ville: "Bingerville",
+        video: "https://youtu.be/dQw4w9WgXcQ" 
     },
     {
         id: 4,
@@ -107,6 +110,7 @@ const properties = [
         bedrooms: "inconnu",
         bathrooms: "inconnu",
         area: "inconnu",
+        ville: "Grand-Bassam",
         video: "https://m.youtube.com/watch?v=02K3howZrng&pp=ygURbWFpc29uIGluYWNoZXbDqWU%3D" // Format mobile
     },
     {
@@ -118,6 +122,7 @@ const properties = [
         bedrooms: "3",
         bathrooms: "2",
         area: "120 m²",
+        ville: "Cocody",
         video: "https://m.youtube.com/watch?v=xlh-n2ii1M8&pp=ygURbWFpc29uIGluYXJjaGV2ZXLSBwkJ2ACjtWo3m0M%3D" // Avec paramètre
     },
     {
@@ -129,12 +134,50 @@ const properties = [
         bedrooms: "inconnu",
         bathrooms: "inconnu",
         area: "inconnu",
+        ville: "Abidjan",
         video: "https://m.youtube.com/embed?v=xlh-n2ii1M8&pp=ygURbWFpc29uIGluYXJjaGV2ZXI%3D" // Format embed mobile
     }
 ];
 
-// Fonction d'affichage des propriétés
-function displayProperties() {
+// Liste de villes pour le filtre
+const villes = ["Toutes les villes", "Abidjan", "Grand-Bassam", "Bingerville", "Cocody", "Yopougon","yamoussokro"];
+
+// Fonction pour générer un filtre de villes
+function createCityFilter() {
+    const filterContainer = document.createElement('div');
+    filterContainer.className = 'filter-container';
+    
+    const label = document.createElement('label');
+    label.textContent = 'Filtrer par ville: ';
+    label.htmlFo = 'city-filter';
+    
+    const select = document.createElement('select');
+    select.id = 'city-filter';
+    
+    // Ajouter les options de villes
+    villes.forEach(ville => {
+        const option = document.createElement('option');
+        option.value = ville;
+        option.textContent = ville;
+        select.appendChild(option);
+    });
+    
+    select.addEventListener('change', function() {
+        displayProperties(this.value);
+    });
+    
+    filterContainer.appendChild(label);
+    filterContainer.appendChild(select);
+    
+    // Insérer avant le conteneur de propriétés
+    const propertyContainer = document.getElementById('propertyContainer');
+    if (propertyContainer && propertyContainer.parentNode) {
+        propertyContainer.parentNode.insertBefore(filterContainer, propertyContainer);
+    }
+}
+
+// Fonction d'affichage des propriétés avec filtre
+function displayProperties(cityFilter = "Toutes les villes") {
     const propertyContainer = document.getElementById('propertyContainer');
     if (!propertyContainer) return;
     
@@ -145,7 +188,18 @@ function displayProperties() {
     const ownerProperties = JSON.parse(localStorage.getItem('ownerProperties')) || [];
     const allProperties = [...properties, ...ownerProperties];
     
-    allProperties.forEach(property => {
+    // Filtrer les propriétés par ville si nécessaire
+    const filteredProperties = cityFilter === "Toutes les villes" 
+        ? allProperties 
+        : allProperties.filter(property => property.ville === cityFilter);
+    
+    // Afficher un message si aucune propriété ne correspond au filtre
+    if (filteredProperties.length === 0) {
+        propertyContainer.innerHTML = '<div class="no-properties">Aucune propriété disponible dans cette ville.</div>';
+        return;
+    }
+    
+    filteredProperties.forEach(property => {
         // Conversion de l'URL vidéo
         const videoUrl = convertYouTubeUrl(property.video);
         const hasVideo = videoUrl !== null;
@@ -178,6 +232,7 @@ function displayProperties() {
                     <span><i class="fas fa-bed"></i> ${property.bedrooms}</span>
                     <span><i class="fas fa-bath"></i> ${property.bathrooms}</span>
                     <span><i class="fas fa-ruler-combined"></i> ${property.area}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> ${property.ville || "Non spécifiée"}</span>
                 </div>
             </div>
         `;
@@ -217,14 +272,14 @@ function handlePropertyClick(property) {
 /***********************
  * AUTHENTIFICATION PROPRIÉTAIRE *
  ***********************/
-const OWNER_CODES = ["PROP123", "OWNER456", "diarra"]; // Codes d'accès
+const OWNER_CODES = ["salimata", "OWNER456", "diarra"]; // Codes d'accès
 
 // Vérifie l'authentification
 function checkAuth() {
     return localStorage.getItem('ownerAuthenticated') === 'true';
 }
 
-// Authentifie le propriétaire
+// verification of the propertie 
 function authenticateOwner() {
     if (checkAuth()) {
         initOwnerPanel();
@@ -265,6 +320,72 @@ function ownerLogout() {
 }
 
 /***********************
+ * GESTION DES MÉDIAS (IMAGES ET VIDÉOS) *
+ ***********************/
+
+// Fonction pour convertir les fichiers en base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// Fonction pour vérifier si le fichier est une image valide
+function isValidImage(file) {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff'];
+    return validTypes.includes(file.type);
+}
+
+// Fonction pour vérifier si le fichier est une vidéo valide
+function isValidVideo(file) {
+    const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+    return validTypes.includes(file.type);
+}
+
+// Fonction pour prévisualiser l'image téléchargée
+function previewImage(input, previewElement) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (!isValidImage(file)) {
+        alert("Format d'image non pris en charge. Formats acceptés: JPEG, PNG, GIF, WebP, BMP, TIFF");
+        input.value = '';
+        return;
+    }
+    
+    fileToBase64(file).then(base64 => {
+        previewElement.src = base64;
+        previewElement.style.display = 'block';
+    }).catch(error => {
+        console.error("Erreur lors de la conversion de l'image:", error);
+        alert("Erreur lors du traitement de l'image");
+    });
+}
+
+// Fonction pour prévisualiser la vidéo téléchargée
+function previewVideo(input, previewElement) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (!isValidVideo(file)) {
+        alert("Format vidéo non pris en charge. Formats acceptés: MP4, WebM, OGG, MOV, AVI");
+        input.value = '';
+        return;
+    }
+    
+    fileToBase64(file).then(base64 => {
+        previewElement.src = base64;
+        previewElement.style.display = 'block';
+    }).catch(error => {
+        console.error("Erreur lors de la conversion de la vidéo:", error);
+        alert("Erreur lors du traitement de la vidéo");
+    });
+}
+
+/***********************
  * INTERFACE PROPRIÉTAIRE *
  ***********************/
 function initOwnerPanel() {
@@ -288,8 +409,38 @@ function initOwnerPanel() {
                 <input type="text" id="property-title" placeholder="Titre" required>
                 <textarea id="property-desc" placeholder="Description" required></textarea>
                 <input type="text" id="property-price" placeholder="Prix" required>
-                <input type="text" id="property-img" placeholder="URL Image" required>
-                <input type="text" id="property-video" placeholder="URL Vidéo YouTube">
+                <input type="text" id="property-bedrooms" placeholder="Nombre de chambres">
+                <input type="text" id="property-bathrooms" placeholder="Nombre de salles de bain">
+                <input type="text" id="property-area" placeholder="Surface (m²)">
+                
+                <div class="form-group">
+                    <label for="property-ville">Ville:</label>
+                    <select id="property-ville" required>
+                        <option value="">Sélectionnez une ville</option>
+                        ${villes.slice(1).map(ville => `<option value="${ville}">${ville}</option>`).join('')}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Image:</label>
+                    <div class="media-upload">
+                        <input type="file" id="property-image-file" accept="image/*">
+                        <p>OU</p>
+                        <input type="text" id="property-img" placeholder="URL Image">
+                    </div>
+                    <img id="image-preview" style="display:none; max-width:100%; margin-top:10px;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Vidéo:</label>
+                    <div class="media-upload">
+                        <input type="file" id="property-video-file" accept="video/*">
+                        <p>OU</p>
+                        <input type="text" id="property-video" placeholder="URL Vidéo YouTube">
+                    </div>
+                    <video id="video-preview" controls style="display:none; max-width:100%; margin-top:10px;"></video>
+                </div>
+                
                 <div class="form-actions">
                     <button type="submit">Enregistrer</button>
                     <button type="button" id="cancel-form">Annuler</button>
@@ -320,8 +471,20 @@ function initOwnerPanel() {
     document.getElementById('cancel-form').addEventListener('click', () => {
         document.getElementById('property-form').style.display = 'none';
         document.getElementById('property-form').reset();
+        // Réinitialiser les prévisualisations
+        document.getElementById('image-preview').style.display = 'none';
+        document.getElementById('video-preview').style.display = 'none';
     });
     document.getElementById('property-form').addEventListener('submit', handlePropertySubmit);
+    
+    // Gestion des téléchargements d'images et vidéos
+    document.getElementById('property-image-file').addEventListener('change', function() {
+        previewImage(this, document.getElementById('image-preview'));
+    });
+    
+    document.getElementById('property-video-file').addEventListener('change', function() {
+        previewVideo(this, document.getElementById('video-preview'));
+    });
     
     loadOwnerProperties();
     loadVisits();
@@ -380,23 +543,73 @@ function deleteVisit(index) {
 /***********************
  * GESTION DES PROPRIÉTÉS *
  ***********************/
-function handlePropertySubmit(e) {
+async function handlePropertySubmit(e) {
     e.preventDefault();
     
     const propertyForm = document.getElementById('property-form');
     const isEdit = propertyForm.dataset.editing === 'true';
     const editId = isEdit ? parseInt(propertyForm.dataset.editId) : null;
     
+    // Récupérer les valeurs du formulaire
+    const title = document.getElementById('property-title').value;
+    const description = document.getElementById('property-desc').value;
+    const price = document.getElementById('property-price').value;
+    const bedrooms = document.getElementById('property-bedrooms').value || "inconnu";
+    const bathrooms = document.getElementById('property-bathrooms').value || "inconnu";
+    const area = document.getElementById('property-area').value || "inconnu";
+    const ville = document.getElementById('property-ville').value;
+    
+    // Gérer l'image (fichier ou URL)
+    let imageUrl = document.getElementById('property-img').value;
+    const imageFile = document.getElementById('property-image-file').files[0];
+    
+    // Gérer la vidéo (fichier ou URL YouTube)
+    let videoUrl = document.getElementById('property-video').value;
+    const videoFile = document.getElementById('property-video-file').files[0];
+    
+    // Convertir les fichiers en base64 si nécessaire
+    if (imageFile) {
+        try {
+            imageUrl = await fileToBase64(imageFile);
+        } catch (error) {
+            console.error("Erreur lors de la conversion de l'image:", error);
+            alert("Erreur lors du traitement de l'image");
+            return;
+        }
+    }
+    
+    if (videoFile) {
+        try {
+            videoUrl = await fileToBase64(videoFile);
+        } catch (error) {
+            console.error("Erreur lors de la conversion de la vidéo:", error);
+            alert("Erreur lors du traitement de la vidéo");
+            return;
+        }
+    }
+    
+    // Vérifier les données obligatoires
+    if (!title || !description || !price || !ville) {
+        alert("Veuillez remplir tous les champs obligatoires (titre, description, prix et ville)");
+        return;
+    }
+    
+    if (!imageUrl && !imageFile) {
+        alert("Veuillez fournir une image pour la propriété");
+        return;
+    }
+    
     const newProperty = {
         id: isEdit ? editId : Date.now(),
-        title: document.getElementById('property-title').value,
-        description: document.getElementById('property-desc').value,
-        price: document.getElementById('property-price').value,
-        image: document.getElementById('property-img').value,
-        video: document.getElementById('property-video').value,
-        bedrooms: "inconnu",
-        bathrooms: "inconnu",
-        area: "inconnu"
+        title,
+        description,
+        price,
+        image: imageUrl,
+        video: videoUrl,
+        bedrooms,
+        bathrooms,
+        area,
+        ville
     };
     
     let ownerProperties = JSON.parse(localStorage.getItem('ownerProperties')) || [];
@@ -414,11 +627,14 @@ function handlePropertySubmit(e) {
     propertyForm.style.display = 'none';
     propertyForm.removeAttribute('data-editing');
     propertyForm.removeAttribute('data-edit-id');
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('video-preview').style.display = 'none';
     
     loadOwnerProperties();
     displayProperties(); // Rafraîchir l'affichage principal
     
-    alert(isEdit ? "Propriété mise à jour avec succès!" : "Nouvelle propriété ajoutée avec succès!");
+    alert(isEdit ? "Propriété mise à jour avec succès! '  ⚠️ si la video ne s'affiche pas ou que c'est l'image alors reduissez la taille ou le format ou encore envoyer la video sur votre compte youtube et copier le lien dans la partie urrl ⚠️ " : "Nouvelle propriété ajoutée avec succès! ");
+    alert(isEdit ? "si la video n'est pas visible, veuillez la télécharger à nouveau" : "si l'image aussi n'est pas visible, veuillez la télécharger à nouveau ou changer le format et ou la taille ");
 }
 
 function loadOwnerProperties() {
@@ -440,7 +656,7 @@ function loadOwnerProperties() {
         propElement.innerHTML = `
             <div class="owner-prop-info">
                 <h5>${prop.title}</h5>
-                <p>${prop.price}</p>
+                <p>${prop.price} - ${prop.ville}</p>
             </div>
             <div class="owner-prop-actions">
                 <button class="edit-prop" data-id="${prop.id}">✏️</button>
@@ -488,16 +704,34 @@ function editProperty(id) {
     document.getElementById('property-title').value = prop.title;
     document.getElementById('property-desc').value = prop.description;
     document.getElementById('property-price').value = prop.price;
-    document.getElementById('property-img').value = prop.image;
-    document.getElementById('property-video').value = prop.video || '';
+    document.getElementById('property-img').value = prop.image.startsWith('data:') ? '' : prop.image;
+    document.getElementById('property-video').value = prop.video && !prop.video.startsWith('data:') ? prop.video : '';
+    document.getElementById('property-bedrooms').value = prop.bedrooms !== "inconnu" ? prop.bedrooms : '';
+    document.getElementById('property-bathrooms').value = prop.bathrooms !== "inconnu" ? prop.bathrooms : '';
+    document.getElementById('property-area').value = prop.area !== "inconnu" ? prop.area : '';
+    document.getElementById('property-ville').value = prop.ville || '';
+    
+    // Prévisualiser les images et vidéos
+    const imagePreview = document.getElementById('image-preview');
+    const videoPreview = document.getElementById('video-preview');
+    
+    if (prop.image) {
+        imagePreview.src = prop.image;
+        imagePreview.style.display = 'block';
+    }
+    
+    if (prop.video && prop.video.startsWith('data:')) {
+        videoPreview.src = prop.video;
+        videoPreview.style.display = 'block';
+    }
     
     propertyForm.style.display = 'block';
 }
 
-/***********************
- * INTÉGRATION *
- ***********************/
-function toggleOwnerButton(show) {
+
+  //INTÉGRATION 
+ 
+  function toggleOwnerButton(show) {
     let btn = document.getElementById('owner-access-btn');
     
     if (show) {
@@ -534,7 +768,7 @@ function setupPanelStyles() {
             position: fixed;
             top: 0;
             right: 0;
-            width: 350px;
+            width: 400px;
             height: 100vh;
             background: white;
             box-shadow: -2px 0 10px rgba(0,0,0,0.2);
@@ -577,7 +811,7 @@ function setupPanelStyles() {
             border-bottom: 1px solid #eee;
             margin-bottom: 10px;
         }
-        #property-form input, #property-form textarea {
+        #property-form input, #property-form textarea, #property-form select {
             width: 100%;
             margin-bottom: 10px;
             padding: 8px;
@@ -633,10 +867,225 @@ function setupPanelStyles() {
             right: 20px;
             z-index: 900;
         }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .media-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .media-upload input[type="file"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        .media-upload input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        .media-upload p {
+            margin: 0 10px;
+            color: #777;
+        }
+        .filter-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-container select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        .no-properties {
+            padding: 20px;
+            text-align: center;
+            font-style: italic;
+            color: #777;
+        }
         @media (max-width: 768px) {
             #owner-panel {
                 width: 100%;
             }
+            .media-upload {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .media-upload input[type="file"],
+            .media-upload input[type="text"] {
+                width: 100%;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Fonction pour télécharger les médias
+function downloadMedia(mediaUrl, filename) {
+    // Créer un lien temporaire
+    const a = document.createElement('a');
+    a.href = mediaUrl;
+    a.download = filename || 'media';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// Fonction pour ajouter les boutons de téléchargement aux médias
+function addDownloadButtonsToMedia() {
+    const propertyCards = document.querySelectorAll('.property-card');
+    
+    propertyCards.forEach(card => {
+        // Vérifier si les boutons n'existent pas déjà
+        if (card.querySelector('.media-download-btn')) return;
+        
+        // Ajouter le bouton de téléchargement d'image
+        const imageContainer = card.querySelector('.property-image-container');
+        const image = card.querySelector('.property-image');
+        
+        if (imageContainer && image && image.src && !image.src.includes('placeholder')) {
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'media-download-btn image-download-btn';
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+            downloadBtn.title = 'Télécharger l\'image';
+            downloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const filename = 'property-image-' + Date.now() + '.jpg';
+                downloadMedia(image.src, filename);
+            });
+            imageContainer.appendChild(downloadBtn);
+        }
+        
+        // Ajouter le bouton de téléchargement vidéo pour les vidéos base64
+        const videoContainer = card.querySelector('.property-video-container');
+        const video = card.querySelector('iframe');
+        
+        if (videoContainer && video && video.src && video.src.startsWith('data:')) {
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'media-download-btn video-download-btn';
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+            downloadBtn.title = 'Télécharger la vidéo';
+            downloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const filename = 'property-video-' + Date.now() + '.mp4';
+                downloadMedia(video.src, filename);
+            });
+            videoContainer.appendChild(downloadBtn);
+        }
+    });
+    
+    // Ajouter des styles CSS pour les boutons de téléchargement
+    if (!document.getElementById('download-btn-styles')) {
+        const style = document.createElement('style');
+        style.id = 'download-btn-styles';
+        style.textContent = `
+            .media-download-btn {
+                position: absolute;
+                background: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 36px;
+                height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 10;
+                transition: all 0.3s ease;
+            }
+            .image-download-btn {
+                bottom: 10px;
+                right: 10px;
+            }
+            .video-download-btn {
+                top: 10px;
+                right: 10px;
+            }
+            .media-download-btn:hover {
+                background: rgba(0, 0, 0, 0.8);
+                transform: scale(1.1);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+/***********************
+ * EXPORTATION DES DONNÉES *
+ ***********************/
+
+// Fonction pour exporter les données des propriétés et des visites
+function exportOwnerData() {
+    const ownerProperties = JSON.parse(localStorage.getItem('ownerProperties')) || [];
+    const visites = JSON.parse(localStorage.getItem('visites')) || [];
+    
+    const data = {
+        properties: ownerProperties,
+        visits: visites,
+        exportDate: new Date().toLocaleString()
+    };
+    
+    const jsonData = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'donnees-immobilieres-' + Date.now() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Ajouter un bouton d'exportation au panneau propriétaire
+function addExportButton() {
+    const ownerPanel = document.getElementById('owner-panel');
+    if (!ownerPanel) return;
+    
+    // Vérifier si le bouton existe déjà
+    if (document.getElementById('export-data-btn')) return;
+    
+    const btn = document.createElement('button');
+    btn.id = 'export-data-btn';
+    btn.innerHTML = '📊 Exporter les données';
+    btn.className = 'export-data-btn';
+    btn.addEventListener('click', exportOwnerData);
+    
+    // Ajouter le bouton après le bouton d'ajout de propriété
+    const addPropertyBtn = document.getElementById('add-property-btn');
+    if (addPropertyBtn && addPropertyBtn.parentNode) {
+        addPropertyBtn.parentNode.insertBefore(btn, addPropertyBtn.nextSibling);
+    }
+    
+    // Ajouter des styles pour le bouton
+    const style = document.createElement('style');
+    style.textContent = `
+        .export-data-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .export-data-btn:hover {
+            background: #8e44ad;
         }
     `;
     document.head.appendChild(style);
@@ -652,6 +1101,7 @@ function initOwnerSystem() {
     // Initialiser le panneau si authentifié
     if (checkAuth()) {
         initOwnerPanel();
+        addExportButton();
         
         // Auto-logout après 1h (3600000 ms)
         setTimeout(ownerLogout, 3600000);
@@ -660,6 +1110,9 @@ function initOwnerSystem() {
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
+    // Créer le filtre par ville
+    createCityFilter();
+    
     // Afficher les propriétés
     displayProperties();
 
@@ -677,4 +1130,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialiser le système propriétaire
     initOwnerSystem();
+    
+    // Observer les changements dans le DOM pour ajouter les boutons de téléchargement
+    const observer = new MutationObserver(() => {
+        addDownloadButtonsToMedia();
+    });
+    
+    observer.observe(document.body, { 
+        childList: true, 
+        subtree: true 
+    });
+    
+    // Ajouter les boutons de téléchargement aux médias existants
+    addDownloadButtonsToMedia();
 });
